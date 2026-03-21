@@ -18,6 +18,14 @@ class Rememora < Formula
     bin.install "rememora"
   end
 
+  def caveats
+    <<~EOS
+      To configure your AI agents to use rememora:
+        rememora setup          # preview changes
+        rememora setup --apply  # apply changes
+    EOS
+  end
+
   test do
     assert_match "rememora", shell_output("#{bin}/rememora --version")
   end
