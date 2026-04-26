@@ -1,17 +1,14 @@
 class Rememora < Formula
   desc "Persistent, cross-agent memory for AI coding assistants"
   homepage "https://github.com/Rememora/rememora"
-  version "1.2.1"
   license "MIT"
 
-  on_macos do
-    url "https://github.com/Rememora/rememora/releases/download/v#{version}/rememora-universal-apple-darwin.tar.gz"
-    sha256 "62b2f92583e5d072842d38aa9f5b2b54e8ddf42d9fa47bf7d57ec7fe4b092885"
-  end
-
-  on_linux do
-    url "https://github.com/Rememora/rememora/releases/download/v#{version}/rememora-x86_64-unknown-linux-gnu.tar.gz"
-    sha256 "f80a7812eaf1b86fb83ca3fe2a4e899b1f7a4fd48f9eeca6512e5c2ec56d4cfd"
+  if OS.mac?
+    url "https://github.com/Rememora/rememora/releases/download/v1.4.1/rememora-universal-apple-darwin.tar.gz"
+    sha256 "078fe27f3e727746e19b1524bbab1905493492d7080c07426d13498729230f13"
+  elsif OS.linux?
+    url "https://github.com/Rememora/rememora/releases/download/v1.4.1/rememora-x86_64-unknown-linux-gnu.tar.gz"
+    sha256 "133045de7942926a9be9716d8fed43d573ffb0e0baae18af924a12648235ba2f"
   end
 
   def install
