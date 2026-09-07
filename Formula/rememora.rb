@@ -4,11 +4,11 @@ class Rememora < Formula
   license "MIT"
 
   if OS.mac?
-    url "https://github.com/Rememora/rememora/releases/download/v1.5.0/rememora-universal-apple-darwin.tar.gz"
-    sha256 "3f987ba0b3d6ff6e25673375815788b2c8d658662cca8c49ffb8aba7e1da1d92"
+    url "https://github.com/Rememora/rememora/releases/download/v1.6.0/rememora-universal-apple-darwin.tar.gz"
+    sha256 "8ae8dc1e4e0a23b0210a0e83db2ba7ba5aefd5e0680c16bf0cfcbe1c4cb3ff55"
   elsif OS.linux?
-    url "https://github.com/Rememora/rememora/releases/download/v1.5.0/rememora-x86_64-unknown-linux-gnu.tar.gz"
-    sha256 "2e61be9ba45824f7bd4a8a55d0d1572798967d5df987cbc60f186b942b39fbb1"
+    url "https://github.com/Rememora/rememora/releases/download/v1.6.0/rememora-x86_64-unknown-linux-gnu.tar.gz"
+    sha256 "5c18f87ca23e6d85899d010a48503447f4a01bd41e26774c238b2128a485eecc"
   end
 
   def install
