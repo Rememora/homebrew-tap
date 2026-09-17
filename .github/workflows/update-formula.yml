@@ -19,19 +19,60 @@ jobs:
           MAC_SHA: ${{ github.event.client_payload.mac_sha }}
           LINUX_SHA: ${{ github.event.client_payload.linux_sha }}
         run: |
-          CLEAN_VERSION="${VERSION#v}"
-          sed -i "s/version \".*\"/version \"${CLEAN_VERSION}\"/" Formula/rememora.rb
+          python3 - "$VERSION" "$MAC_SHA" "$LINUX_SHA" <<'PYEOF'
+          import re
+          import sys
 
-          # Update macOS sha256
-          awk -v sha="$MAC_SHA" '/on_macos/,/end/ { if (/sha256/) { sub(/"[^"]*"/, "\"" sha "\"") } } {print}' Formula/rememora.rb > tmp && mv tmp Formula/rememora.rb
+          version, mac_sha, linux_sha = sys.argv[1:4]
+          path = "Formula/rememora.rb"
+          text = open(path).read()
 
-          # Update Linux sha256
-          awk -v sha="$LINUX_SHA" '/on_linux/,/end/ { if (/sha256/) { sub(/"[^"]*"/, "\"" sha "\"") } } {print}' Formula/rememora.rb > tmp && mv tmp Formula/rememora.rb
+          # The formula has no standalone `version "..."` field — the version
+          # lives only in each platform's download URL. Match those URLs
+          # exactly (asset filenames are fixed) so a format change elsewhere
+          # in the file can't cause a silent no-op.
+          text, n_mac = re.subn(
+              r'(url "https://github\.com/Rememora/rememora/releases/download/)v[0-9.]+(/rememora-universal-apple-darwin\.tar\.gz")',
+              r"\g<1>" + version + r"\g<2>",
+              text,
+          )
+          text, n_linux = re.subn(
+              r'(url "https://github\.com/Rememora/rememora/releases/download/)v[0-9.]+(/rememora-x86_64-unknown-linux-gnu\.tar\.gz")',
+              r"\g<1>" + version + r"\g<2>",
+              text,
+          )
+          if n_mac != 1 or n_linux != 1:
+              sys.exit(
+                  f"Expected exactly one mac url and one linux url to update, "
+                  f"got {n_mac} and {n_linux} — Formula/rememora.rb's shape "
+                  f"changed, fix this script instead of letting it silently no-op."
+              )
+
+          # Two sha256 lines exist, one per `if OS.mac? ... elsif OS.linux? ... end`
+          # branch. Patch each half independently so the mac sha can never land
+          # on the linux line or vice versa.
+          mac_part, marker, linux_part = text.partition("elsif OS.linux?")
+          if not marker:
+              sys.exit("Could not find 'elsif OS.linux?' to split the formula on.")
+          mac_part, n1 = re.subn(r'sha256 "[^"]*"', f'sha256 "{mac_sha}"', mac_part, count=1)
+          linux_part, n2 = re.subn(r'sha256 "[^"]*"', f'sha256 "{linux_sha}"', linux_part, count=1)
+          if n1 != 1 or n2 != 1:
+              sys.exit(f"Expected exactly one sha256 per platform block, got {n1} and {n2}.")
+
+          open(path, "w").write(mac_part + marker + linux_part)
+          print(f"Updated Formula/rememora.rb to {version}")
+          PYEOF
 
       - name: Commit and push
+        env:
+          VERSION: ${{ github.event.client_payload.version }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add Formula/rememora.rb
+          if git diff --cached --quiet; then
+            echo "Formula/rememora.rb already matches ${VERSION} — nothing to commit."
+            exit 0
+          fi
           git commit -m "Update rememora to ${VERSION#v}"
           git push
